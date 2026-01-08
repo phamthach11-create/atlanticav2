@@ -1,0 +1,18 @@
+# src/atlantica2/rules/status_handlers/stun.py
+# All comments in this project are written in English.
+
+from __future__ import annotations
+
+from typing import Any
+
+from src.atlantica2.rules.status_pipeline import StatusFrame, StatusInstance
+
+
+def on_start_turn(unit: Any, inst: StatusInstance, frame: StatusFrame) -> None:
+    """
+    Stun rules (from your sheet):
+      - Cannot act
+      - Cannot gain AP by turn
+    """
+    frame.can_act = False
+    frame.block_ap_gain = True

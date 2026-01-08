@@ -1,0 +1,40 @@
+# src/atlantica2/rules/status_handlers/bleeding.py
+# All comments in this project are written in English.
+
+from __future__ import annotations
+
+from typing import Any
+
+from src.atlantica2.rules.status_pipeline import StatusEvent, StatusFrame, StatusInstance
+
+
+def on_start_turn(unit: Any, inst: StatusInstance, frame: StatusFrame) -> None:
+    """
+    Bleeding rule (from your sheet):
+      - Deal 30% damage in 1 turn based on triggered hit.
+
+    We expect inst.params to include:
+      - "triggered_damage": the raw dealt damage of the triggered hit (float)
+    Engine should set this when applying bleeding (e.g., spear proc).
+    """
+    uid = str(getattr(unit, "uid", f"{getattr(unit,'team','?')}-{getattr(unit,'slot','?')}"))
+    base = float(inst.params.get("triggered_damage", 0.0))
+    ratio = float(inst.params.get("dot_ratio", 0.30))  # default 30%
+    dmg = max(0.0, base * ratio)
+
+    if dmg <= 0:
+        return
+
+    frame.events.append(
+        StatusEvent(
+            type="damage",
+            target_uid=uid,
+            amount=dmg,
+            payload={
+                "source": "status:bleeding",
+                "status_key": "bleeding",
+                "ratio": ratio,
+                "base_triggered_damage": base,
+            },
+        )
+    )
